@@ -1,45 +1,9 @@
-// 資料載入配置
-const DATA_CONFIG = {
-    useGitHub: true, // 設為 true 使用 GitHub 資料，false 使用 localStorage
-    githubRepo: 'godkin1211/path2deutschland',
-    newsUrl: 'https://raw.githubusercontent.com/godkin1211/path2deutschland/main/data/news.json',
-    activitiesUrl: 'https://raw.githubusercontent.com/godkin1211/path2deutschland/main/data/activities.json'
-};
+// ==================== 簡化版前台數據管理 ====================
+// 純靜態網站版本，只從localStorage讀取數據
 
 // 資料儲存變數
 let newsData = [];
 let activitiesData = [];
-
-// 從 GitHub 載入資料的函數
-async function loadDataFromGitHub() {
-    try {
-        // 載入新聞資料
-        const newsResponse = await fetch(DATA_CONFIG.newsUrl);
-        if (newsResponse.ok) {
-            newsData = await newsResponse.json();
-        } else {
-            console.warn('無法載入新聞資料，使用空陣列');
-            newsData = [];
-        }
-        
-        // 載入活動資料
-        const activitiesResponse = await fetch(DATA_CONFIG.activitiesUrl);
-        if (activitiesResponse.ok) {
-            activitiesData = await activitiesResponse.json();
-        } else {
-            console.warn('無法載入活動資料，使用空陣列');
-            activitiesData = [];
-        }
-        
-        return true;
-    } catch (error) {
-        console.error('載入 GitHub 資料時發生錯誤:', error);
-        // 回退到 localStorage
-        newsData = JSON.parse(localStorage.getItem('newsItems') || '[]');
-        activitiesData = JSON.parse(localStorage.getItem('activityItems') || '[]');
-        return false;
-    }
-}
 
 // 從 localStorage 載入資料的函數
 function loadDataFromLocalStorage() {
@@ -52,8 +16,6 @@ function createNewsCards() {
     const container = document.getElementById('news-container');
     // 清空容器內容
     container.innerHTML = '';
-    
-    // 資料已經載入，不需要重新載入
     
     // 如果沒有新聞資料，顯示提示訊息
     if (newsData.length === 0) {
@@ -84,8 +46,6 @@ function createActivityCards() {
     // 清空容器內容
     container.innerHTML = '';
     
-    // 資料已經載入，不需要重新載入
-    
     // 如果沒有活動資料，顯示提示訊息
     if (activitiesData.length === 0) {
         container.innerHTML = '<p class="text-gray-500 text-center py-8">目前尚無活動紀錄</p>';
@@ -109,28 +69,23 @@ function createActivityCards() {
     });
 }
 
-// 聯絡我們區塊已改為社群媒體連結，無需表單處理程式碼
-
 // 刷新頁面內容的函數
 function refreshPageContent() {
+    // 重新載入數據
+    loadDataFromLocalStorage();
+    // 更新卡片顯示
     createNewsCards();
     createActivityCards();
 }
 
 // 頁面初始化
-document.addEventListener('DOMContentLoaded', async function() {
-    // 根據配置載入資料
-    if (DATA_CONFIG.useGitHub) {
-        const success = await loadDataFromGitHub();
-        if (!success) {
-            console.warn('GitHub 資料載入失敗，使用 localStorage 資料');
-        }
-    } else {
-        loadDataFromLocalStorage();
-    }
+document.addEventListener('DOMContentLoaded', function() {
+    // 載入資料
+    loadDataFromLocalStorage();
     
     // 載入新聞和活動卡片
-    refreshPageContent();
+    createNewsCards();
+    createActivityCards();
     
     // 設定滾動動畫觀察器
     const observer = new IntersectionObserver((entries) => {
