@@ -1,11 +1,39 @@
-// ==================== 簡化版前台數據管理 ====================
-// 純靜態網站版本，只從localStorage讀取數據
+// ==================== 前台數據管理 ====================
+// 支援從JSON檔案或localStorage讀取數據
 
 // 資料儲存變數
 let newsData = [];
 let activitiesData = [];
 
-// 從 localStorage 載入資料的函數
+// 從JSON檔案載入資料的函數
+async function loadDataFromJSON() {
+    try {
+        // 嘗試載入新聞資料
+        const newsResponse = await fetch('data/news.json');
+        if (newsResponse.ok) {
+            newsData = await newsResponse.json();
+        } else {
+            console.warn('無法載入新聞資料，使用空陣列');
+            newsData = [];
+        }
+        
+        // 嘗試載入活動資料
+        const activitiesResponse = await fetch('data/activities.json');
+        if (activitiesResponse.ok) {
+            activitiesData = await activitiesResponse.json();
+        } else {
+            console.warn('無法載入活動資料，使用空陣列');
+            activitiesData = [];
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('載入JSON資料時發生錯誤:', error);
+        return false;
+    }
+}
+
+// 從 localStorage 載入資料的函數（作為後備方案）
 function loadDataFromLocalStorage() {
     newsData = JSON.parse(localStorage.getItem('newsItems') || '[]');
     activitiesData = JSON.parse(localStorage.getItem('activityItems') || '[]');
@@ -70,18 +98,26 @@ function createActivityCards() {
 }
 
 // 刷新頁面內容的函數
-function refreshPageContent() {
-    // 重新載入數據
-    loadDataFromLocalStorage();
+async function refreshPageContent() {
+    // 先嘗試從JSON檔案載入，失敗則使用localStorage
+    const jsonSuccess = await loadDataFromJSON();
+    if (!jsonSuccess) {
+        loadDataFromLocalStorage();
+    }
+    
     // 更新卡片顯示
     createNewsCards();
     createActivityCards();
 }
 
 // 頁面初始化
-document.addEventListener('DOMContentLoaded', function() {
-    // 載入資料
-    loadDataFromLocalStorage();
+document.addEventListener('DOMContentLoaded', async function() {
+    // 載入資料（優先JSON檔案，後備localStorage）
+    const jsonSuccess = await loadDataFromJSON();
+    if (!jsonSuccess) {
+        console.log('JSON檔案載入失敗，使用localStorage資料');
+        loadDataFromLocalStorage();
+    }
     
     // 載入新聞和活動卡片
     createNewsCards();
@@ -104,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(section);
     });
     
-    // 監聽 localStorage 變更，以便即時更新內容
+    // 監聽 localStorage 變更，以便即時更新內容（本地開發用）
     window.addEventListener('storage', function(e) {
         if (e.key === 'newsItems' || e.key === 'activityItems') {
             refreshPageContent();

@@ -1,6 +1,26 @@
+# Test files
 test.html
 功能測試.html
 管理員登入說明.html
-CLAUDE.md
-DEPLOYMENT.md
-SECURITY_IMPROVEMENTS.md
+
+# Documentation (keep these files in repo)
+# CLAUDE.md
+# DEPLOYMENT.md
+# SECURITY_IMPROVEMENTS.md
+
+# Admin system node_modules only (keep admin source code)
+admin/node_modules/
+admin/package-lock.json
+admin/
+
+# Local development files
+.DS_Store
+*.log
+
+# Editor files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
