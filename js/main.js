@@ -1,23 +1,7 @@
-// 從 localStorage 載入新聞和活動資料，如果沒有則使用預設資料
-let newsData = JSON.parse(localStorage.getItem('newsItems')) || [
-    {
-        id: 1,
-        title: '2025年留學展即將開始',
-        date: '2025-03-15',
-        content: '我們將參加2025年台北留學展，歡迎蒞臨參觀諮詢！',
-        image: 'img/icon.png' // 統一使用 icon.png
-    }
-];
+// 從 localStorage 載入新聞和活動資料，如果沒有則使用空陣列
+let newsData = JSON.parse(localStorage.getItem('newsItems')) || [];
 
-let activitiesData = JSON.parse(localStorage.getItem('activityItems')) || [
-    {
-        id: 1,
-        title: '2024冬季留學說明會回顧',
-        date: '2024-12-20',
-        content: '本次說明會吸引超過100位同學參與，感謝大家的熱情參與！',
-        image: 'img/icon.png' // 統一使用 icon.png
-    }
-];
+let activitiesData = JSON.parse(localStorage.getItem('activityItems')) || [];
 
 // 建立新聞卡片的函數
 function createNewsCards() {
@@ -27,6 +11,12 @@ function createNewsCards() {
     
     // 重新從 localStorage 載入最新資料
     newsData = JSON.parse(localStorage.getItem('newsItems')) || newsData;
+    
+    // 如果沒有新聞資料，顯示提示訊息
+    if (newsData.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-8">目前尚無最新動態</p>';
+        return;
+    }
     
     // 遍歷新聞資料並建立卡片
     newsData.forEach(news => {
@@ -53,6 +43,12 @@ function createActivityCards() {
     
     // 重新從 localStorage 載入最新資料
     activitiesData = JSON.parse(localStorage.getItem('activityItems')) || activitiesData;
+    
+    // 如果沒有活動資料，顯示提示訊息
+    if (activitiesData.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-8">目前尚無活動紀錄</p>';
+        return;
+    }
     
     // 遍歷活動資料並建立卡片
     activitiesData.forEach(activity => {
