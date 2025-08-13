@@ -114,6 +114,7 @@ document.getElementById('news-form').addEventListener('submit', async function(e
     const title = document.getElementById('news-title').value.trim();
     const date = document.getElementById('news-date').value;
     const content = document.getElementById('news-content').value.trim();
+    const imageFile = document.getElementById('news-image').files[0];
     
     if (!title || !date || !content) {
         alert('請填寫所有必填欄位！');
@@ -126,11 +127,26 @@ document.getElementById('news-form').addEventListener('submit', async function(e
     submitButton.disabled = true;
     
     try {
-        await apiRequest('/news', {
+        // 建立FormData來支援檔案上傳
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('date', date);
+        formData.append('content', content);
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/news`, {
             method: 'POST',
-            body: JSON.stringify({ title, date, content })
+            body: formData // 不需要設定Content-Type，瀏覽器會自動處理
         });
         
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || `HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
         alert('最新動態已發布並寫入JSON檔案！');
         this.reset();
         
@@ -139,7 +155,12 @@ document.getElementById('news-form').addEventListener('submit', async function(e
         updatePreviews();
         
     } catch (error) {
-        alert(`發布失敗: ${error.message}`);
+        console.error('發布失敗:', error);
+        if (error.message.includes('fetch')) {
+            alert('無法連接到後端伺服器，請確認伺服器已啟動');
+        } else {
+            alert(`發布失敗: ${error.message}`);
+        }
     } finally {
         submitButton.textContent = originalText;
         submitButton.disabled = false;
@@ -153,6 +174,7 @@ document.getElementById('activity-form').addEventListener('submit', async functi
     const title = document.getElementById('activity-title').value.trim();
     const date = document.getElementById('activity-date').value;
     const content = document.getElementById('activity-content').value.trim();
+    const imageFile = document.getElementById('activity-image').files[0];
     
     if (!title || !date || !content) {
         alert('請填寫所有必填欄位！');
@@ -165,11 +187,26 @@ document.getElementById('activity-form').addEventListener('submit', async functi
     submitButton.disabled = true;
     
     try {
-        await apiRequest('/activities', {
+        // 建立FormData來支援檔案上傳
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('date', date);
+        formData.append('content', content);
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/activities`, {
             method: 'POST',
-            body: JSON.stringify({ title, date, content })
+            body: formData // 不需要設定Content-Type，瀏覽器會自動處理
         });
         
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || `HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
         alert('活動紀錄已發布並寫入JSON檔案！');
         this.reset();
         
@@ -178,7 +215,12 @@ document.getElementById('activity-form').addEventListener('submit', async functi
         updatePreviews();
         
     } catch (error) {
-        alert(`發布失敗: ${error.message}`);
+        console.error('發布失敗:', error);
+        if (error.message.includes('fetch')) {
+            alert('無法連接到後端伺服器，請確認伺服器已啟動');
+        } else {
+            alert(`發布失敗: ${error.message}`);
+        }
     } finally {
         submitButton.textContent = originalText;
         submitButton.disabled = false;

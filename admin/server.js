@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs').promises;
 const path = require('path');
 const cors = require('cors');
+const multer = require('multer');
 
 // 載入環境變數
 require('dotenv').config();
@@ -31,8 +32,47 @@ app.get('/', (req, res) => {
 
 // 檔案路徑
 const DATA_DIR = path.join(__dirname, '..', 'data');
+const IMG_DIR = path.join(__dirname, '..', 'img');
 const NEWS_FILE = path.join(DATA_DIR, 'news.json');
 const ACTIVITIES_FILE = path.join(DATA_DIR, 'activities.json');
+
+// Multer 文件上傳配置
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        // 確保img目錄存在
+        fs.mkdir(IMG_DIR, { recursive: true }).then(() => {
+            cb(null, IMG_DIR);
+        }).catch(err => {
+            console.error('創建img目錄失敗:', err);
+            cb(err);
+        });
+    },
+    filename: function (req, file, cb) {
+        // 生成唯一檔名：時間戳_原始檔名
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const baseName = path.basename(file.originalname, ext);
+        cb(null, uniqueSuffix + '_' + baseName + ext);
+    }
+});
+
+// 文件過濾器：只允許圖片
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('只允許上傳圖片文件！'), false);
+    }
+};
+
+// Multer 實例
+const upload = multer({ 
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 限制5MB
+    }
+});
 
 // 讀取JSON檔案
 async function readJSONFile(filePath, defaultValue = []) {
@@ -78,8 +118,8 @@ app.get('/api/activities', async (req, res) => {
     }
 });
 
-// 新增新聞
-app.post('/api/news', async (req, res) => {
+// 新增新聞（支援圖片上傳）
+app.post('/api/news', upload.single('image'), async (req, res) => {
     try {
         const { title, date, content } = req.body;
         
@@ -90,13 +130,19 @@ app.post('/api/news', async (req, res) => {
 
         const news = await readJSONFile(NEWS_FILE);
         
+        // 決定圖片路徑
+        let imagePath = 'img/icon.png'; // 預設圖片
+        if (req.file) {
+            imagePath = `img/${req.file.filename}`;
+        }
+        
         // 建立新的新聞項目
         const newNews = {
             id: Date.now(),
             title: title.trim(),
             date: date,
             content: content.trim(),
-            image: 'img/icon.png'
+            image: imagePath
         };
 
         // 加入到陣列開頭
@@ -106,14 +152,15 @@ app.post('/api/news', async (req, res) => {
         await writeJSONFile(NEWS_FILE, news);
         
         res.json({ success: true, data: newNews });
-        console.log(`新增新聞: ${title}`);
+        console.log(`新增新聞: ${title}${req.file ? ` (圖片: ${imagePath})` : ''}`);
     } catch (error) {
+        console.error('新增新聞失敗:', error);
         res.status(500).json({ error: '新增新聞失敗' });
     }
 });
 
-// 新增活動
-app.post('/api/activities', async (req, res) => {
+// 新增活動（支援圖片上傳）
+app.post('/api/activities', upload.single('image'), async (req, res) => {
     try {
         const { title, date, content } = req.body;
         
@@ -124,13 +171,19 @@ app.post('/api/activities', async (req, res) => {
 
         const activities = await readJSONFile(ACTIVITIES_FILE);
         
+        // 決定圖片路徑
+        let imagePath = 'img/icon.png'; // 預設圖片
+        if (req.file) {
+            imagePath = `img/${req.file.filename}`;
+        }
+        
         // 建立新的活動項目
         const newActivity = {
             id: Date.now(),
             title: title.trim(),
             date: date,
             content: content.trim(),
-            image: 'img/icon.png'
+            image: imagePath
         };
 
         // 加入到陣列開頭
@@ -140,8 +193,9 @@ app.post('/api/activities', async (req, res) => {
         await writeJSONFile(ACTIVITIES_FILE, activities);
         
         res.json({ success: true, data: newActivity });
-        console.log(`新增活動: ${title}`);
+        console.log(`新增活動: ${title}${req.file ? ` (圖片: ${imagePath})` : ''}`);
     } catch (error) {
+        console.error('新增活動失敗:', error);
         res.status(500).json({ error: '新增活動失敗' });
     }
 });
