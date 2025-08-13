@@ -1,11 +1,6 @@
-.htaccess
-css.php
-rpc/
-sites/site*/admin/
-sites/site*/private/
-sites/site*/public/admin/
-sites/site*/public/setup/
-sites/site*/public/theme/
-textpattern/
-HISTORY.txt
-README.txt
+test.html
+功能測試.html
+管理員登入說明.html
+CLAUDE.md
+DEPLOYMENT.md
+SECURITY_IMPROVEMENTS.md
