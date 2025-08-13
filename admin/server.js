@@ -3,8 +3,19 @@ const fs = require('fs').promises;
 const path = require('path');
 const cors = require('cors');
 
+// 載入環境變數
+require('dotenv').config();
+
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+
+// 檢查必要的環境變數
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) {
+    console.error('❌ 錯誤：未設定 ADMIN_PASSWORD 環境變數');
+    console.error('請建立 admin/.env 檔案並設定 ADMIN_PASSWORD=您的密碼');
+    process.exit(1);
+}
 
 // 中介軟體
 app.use(cors());
@@ -206,6 +217,21 @@ app.delete('/api/clear', async (req, res) => {
         console.log('已清空所有資料');
     } catch (error) {
         res.status(500).json({ error: '清空資料失敗' });
+    }
+});
+
+// 密碼驗證API
+app.post('/api/auth/login', (req, res) => {
+    const { password } = req.body;
+    
+    if (!password) {
+        return res.status(400).json({ error: '請提供密碼' });
+    }
+    
+    if (password === ADMIN_PASSWORD) {
+        res.json({ success: true, message: '登入成功' });
+    } else {
+        res.status(401).json({ error: '密碼錯誤' });
     }
 });
 

@@ -81,9 +81,6 @@
     </div>
 
     <script>
-        // 預設管理員密碼
-        const ADMIN_PASSWORD = 'admin12345678';
-
         // 檢查是否已登入
         if (localStorage.getItem('adminLoggedIn') === 'true') {
             window.location.href = 'index.html';
@@ -100,8 +97,33 @@
             }, 5000);
         }
 
+        // 透過API驗證密碼
+        async function validatePassword(password) {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || '驗證失敗');
+                }
+            } catch (error) {
+                if (error.message.includes('fetch')) {
+                    throw new Error('無法連接到伺服器，請確認後台服務已啟動');
+                }
+                throw error;
+            }
+        }
+
         // 處理登入表單提交
-        document.getElementById('login-form').addEventListener('submit', function(e) {
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const password = document.getElementById('admin-password').value.trim();
@@ -115,31 +137,37 @@
                 return;
             }
 
-            // 驗證密碼
-            if (password !== ADMIN_PASSWORD) {
-                showError('密碼錯誤，請重新輸入');
-                document.getElementById('admin-password').value = '';
-                document.getElementById('admin-password').focus();
-                return;
-            }
-
             // 禁用提交按鈕
             submitButton.disabled = true;
-            submitButton.textContent = '登入中...';
+            submitButton.textContent = '驗證中...';
 
-            // 登入成功，儲存狀態
-            localStorage.setItem('adminLoggedIn', 'true');
-            localStorage.setItem('adminLoginTime', new Date().toISOString());
-            localStorage.setItem('adminUser', name);
+            try {
+                // 透過API驗證密碼
+                await validatePassword(password);
 
-            if (remember) {
-                localStorage.setItem('adminRememberMe', 'true');
-            }
+                // 登入成功，儲存狀態
+                localStorage.setItem('adminLoggedIn', 'true');
+                localStorage.setItem('adminLoginTime', new Date().toISOString());
+                localStorage.setItem('adminUser', name);
 
-            // 短暫延遲後重定向
-            setTimeout(() => {
+                if (remember) {
+                    localStorage.setItem('adminRememberMe', 'true');
+                }
+
+                // 重定向到管理頁面
                 window.location.href = 'index.html';
-            }, 500);
+
+            } catch (error) {
+                showError(error.message);
+                
+                // 清空密碼欄位
+                document.getElementById('admin-password').value = '';
+                document.getElementById('admin-password').focus();
+            } finally {
+                // 恢復提交按鈕
+                submitButton.disabled = false;
+                submitButton.textContent = '登入管理後台';
+            }
         });
 
         // 頁面載入時設置焦點
