@@ -1,7 +1,51 @@
-// 從 localStorage 載入新聞和活動資料，如果沒有則使用空陣列
-let newsData = JSON.parse(localStorage.getItem('newsItems')) || [];
+// 資料載入配置
+const DATA_CONFIG = {
+    useGitHub: true, // 設為 true 使用 GitHub 資料，false 使用 localStorage
+    githubRepo: 'godkin1211/path2deutschland',
+    newsUrl: 'https://raw.githubusercontent.com/godkin1211/path2deutschland/main/data/news.json',
+    activitiesUrl: 'https://raw.githubusercontent.com/godkin1211/path2deutschland/main/data/activities.json'
+};
 
-let activitiesData = JSON.parse(localStorage.getItem('activityItems')) || [];
+// 資料儲存變數
+let newsData = [];
+let activitiesData = [];
+
+// 從 GitHub 載入資料的函數
+async function loadDataFromGitHub() {
+    try {
+        // 載入新聞資料
+        const newsResponse = await fetch(DATA_CONFIG.newsUrl);
+        if (newsResponse.ok) {
+            newsData = await newsResponse.json();
+        } else {
+            console.warn('無法載入新聞資料，使用空陣列');
+            newsData = [];
+        }
+        
+        // 載入活動資料
+        const activitiesResponse = await fetch(DATA_CONFIG.activitiesUrl);
+        if (activitiesResponse.ok) {
+            activitiesData = await activitiesResponse.json();
+        } else {
+            console.warn('無法載入活動資料，使用空陣列');
+            activitiesData = [];
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('載入 GitHub 資料時發生錯誤:', error);
+        // 回退到 localStorage
+        newsData = JSON.parse(localStorage.getItem('newsItems') || '[]');
+        activitiesData = JSON.parse(localStorage.getItem('activityItems') || '[]');
+        return false;
+    }
+}
+
+// 從 localStorage 載入資料的函數
+function loadDataFromLocalStorage() {
+    newsData = JSON.parse(localStorage.getItem('newsItems') || '[]');
+    activitiesData = JSON.parse(localStorage.getItem('activityItems') || '[]');
+}
 
 // 建立新聞卡片的函數
 function createNewsCards() {
@@ -9,8 +53,7 @@ function createNewsCards() {
     // 清空容器內容
     container.innerHTML = '';
     
-    // 重新從 localStorage 載入最新資料
-    newsData = JSON.parse(localStorage.getItem('newsItems')) || newsData;
+    // 資料已經載入，不需要重新載入
     
     // 如果沒有新聞資料，顯示提示訊息
     if (newsData.length === 0) {
@@ -41,8 +84,7 @@ function createActivityCards() {
     // 清空容器內容
     container.innerHTML = '';
     
-    // 重新從 localStorage 載入最新資料
-    activitiesData = JSON.parse(localStorage.getItem('activityItems')) || activitiesData;
+    // 資料已經載入，不需要重新載入
     
     // 如果沒有活動資料，顯示提示訊息
     if (activitiesData.length === 0) {
@@ -76,7 +118,17 @@ function refreshPageContent() {
 }
 
 // 頁面初始化
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // 根據配置載入資料
+    if (DATA_CONFIG.useGitHub) {
+        const success = await loadDataFromGitHub();
+        if (!success) {
+            console.warn('GitHub 資料載入失敗，使用 localStorage 資料');
+        }
+    } else {
+        loadDataFromLocalStorage();
+    }
+    
     // 載入新聞和活動卡片
     refreshPageContent();
     
