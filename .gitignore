@@ -11,7 +11,6 @@ test.html
 # Admin system node_modules only (keep admin source code)
 admin/node_modules/
 admin/package-lock.json
-admin/
 
 # Local development files
 .DS_Store

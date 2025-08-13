@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理後台登入 - 遊此德證遊留學專業諮詢顧問</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .login-form {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="login-form max-w-md w-full mx-4 p-8 rounded-2xl shadow-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">管理後台登入</h1>
+            <p class="text-gray-600">遊此德證遊留學專業諮詢顧問</p>
+        </div>
+
+        <form id="login-form" class="space-y-6">
+            <div class="text-center py-4 px-6 bg-blue-50 rounded-lg border border-blue-200 mb-6">
+                <div class="mb-3">
+                    <svg class="mx-auto h-10 w-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-1">管理員認證</h3>
+                <p class="text-gray-600 text-sm">請輸入管理員密碼</p>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2" for="admin-password">
+                    管理員密碼 <span class="text-red-500">*</span>
+                </label>
+                <input type="password" id="admin-password" name="admin-password" 
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all" 
+                       required placeholder="請輸入管理員密碼">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2" for="admin-name">
+                    管理員名稱 <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="admin-name" name="admin-name" 
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all" 
+                       required placeholder="請輸入您的名稱">
+            </div>
+
+            <div class="flex items-center">
+                <input type="checkbox" id="remember" name="remember" class="mr-2">
+                <label for="remember" class="text-sm text-gray-600">記住登入狀態</label>
+            </div>
+
+            <button type="submit" 
+                    class="w-full bg-gradient-to-r from-gray-700 to-gray-900 text-white py-3 px-4 rounded-lg font-semibold hover:from-gray-800 hover:to-black transform hover:scale-105 transition-all duration-200 shadow-lg">
+                登入管理後台
+            </button>
+        </form>
+
+        <div id="error-message" class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded hidden">
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="../index.html" class="text-sm text-gray-600 hover:text-gray-800 transition-colors">
+                ← 返回首頁
+            </a>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <div class="text-xs text-gray-500 bg-yellow-50 p-2 rounded border border-yellow-200">
+                <p><strong>注意：</strong> 請先啟動後台伺服器</p>
+                <p><code>cd admin && npm install && npm start</code></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 預設管理員密碼
+        const ADMIN_PASSWORD = 'admin12345678';
+
+        // 檢查是否已登入
+        if (localStorage.getItem('adminLoggedIn') === 'true') {
+            window.location.href = 'index.html';
+        }
+
+        // 顯示錯誤訊息
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        // 處理登入表單提交
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('admin-password').value.trim();
+            const name = document.getElementById('admin-name').value.trim();
+            const remember = document.getElementById('remember').checked;
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            
+            // 驗證輸入
+            if (!password || !name) {
+                showError('請填寫所有必填欄位');
+                return;
+            }
+
+            // 驗證密碼
+            if (password !== ADMIN_PASSWORD) {
+                showError('密碼錯誤，請重新輸入');
+                document.getElementById('admin-password').value = '';
+                document.getElementById('admin-password').focus();
+                return;
+            }
+
+            // 禁用提交按鈕
+            submitButton.disabled = true;
+            submitButton.textContent = '登入中...';
+
+            // 登入成功，儲存狀態
+            localStorage.setItem('adminLoggedIn', 'true');
+            localStorage.setItem('adminLoginTime', new Date().toISOString());
+            localStorage.setItem('adminUser', name);
+
+            if (remember) {
+                localStorage.setItem('adminRememberMe', 'true');
+            }
+
+            // 短暫延遲後重定向
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 500);
+        });
+
+        // 頁面載入時設置焦點
+        window.addEventListener('load', function() {
+            document.getElementById('admin-password').focus();
+        });
+    </script>
+</body>
+</html>
