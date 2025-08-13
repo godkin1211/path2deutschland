@@ -8,9 +8,10 @@ test.html
 # DEPLOYMENT.md
 # SECURITY_IMPROVEMENTS.md
 
-# Admin system node_modules only (keep admin source code)
+# Admin system node_modules and sensitive files
 admin/node_modules/
 admin/package-lock.json
+admin/.env
 
 # Local development files
 .DS_Store
